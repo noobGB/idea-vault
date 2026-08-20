@@ -18,7 +18,7 @@ a new row here in the same PR.
 | **Database schema / storage** | `bot/db.py`, `dashboard/db.py` | TECH_STACK.md `## 4. Storage`; CLAUDE.md's storage section |
 | **Dashboard (routes, templates, search)** | `dashboard/app.py`, `dashboard/templates/*.html` | README's "How it works" step 3; TECH_STACK.md `## 5. Dashboard` |
 | **Any visible UI change** (dashboard layout, theme, card fields) | whatever page/component changed | README's Screenshots section (`.github/screenshot-dashboard-*.png` + the `![...]` lines above each) — a stale screenshot is exactly the kind of doc debt this file exists to prevent, same as stale prose |
-| **Architecture / request flow** | `bot/main.py`, `bot/claude_client.py`, `dashboard/app.py` (i.e. wherever the actual data path changes) | `docs/architecture.drawio` (+ its exported `.png`/`.svg`/`.gif`); README's "How it works" section that links to it |
+| **Architecture / request flow** | `bot/main.py`, `bot/claude_client.py`, `dashboard/app.py` (i.e. wherever the actual data path changes) | `docs/architecture.drawio` (+ its exported `.png`/`.svg`/`.gif`); README's own "## Architecture" section, which embeds the GIF directly |
 | **Docker / Compose / deployment shape** | `docker-compose.yml`, `bot/Dockerfile`, `dashboard/Dockerfile` | README's Setup steps; TECH_STACK.md `## 6. Containerization`; CLAUDE.md's "Running it" |
 | **Windows one-click launcher** | `Launch-IdeaVault.ps1` | README's "Windows one-click launcher" callout — especially `$AppUrl` if `DASHBOARD_PORT`'s default ever changes |
 | **Configuration (env vars)** | `.env.example` | README's Configuration table |

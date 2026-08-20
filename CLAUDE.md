@@ -80,12 +80,15 @@ topic. If it introduces a genuinely new one, add a row in the same PR.
 ## Storage (`bot/db.py`, `dashboard/db.py`)
 
 Single SQLite file (`idea_vault.sqlite`) on a Docker named volume, opened with the **default
-rollback journal, not WAL** — deliberate, not an oversight. WAL needs `mmap` shared-memory
-coordination between every process with the file open, which breaks down once more than one process
-opens the file through a virtualized share; that's exactly this deployment's shape (`bot` and
-`dashboard` are separate containers opening the identical volume-mounted file). `PRAGMA
-busy_timeout` handles the ordinary "two writes at once" case instead. **Don't turn WAL back on**
-without re-reading this reasoning (see TECH_STACK.md `## 4. Storage` for the fuller version).
+rollback journal, not WAL** — deliberate, not an oversight, but a smaller claim than it might sound:
+this is *not* a proven WAL-breaks-here case. `bot` and `dashboard` share a Docker **named volume**
+(not a bind-mounted host path), so both containers are just two processes under the same kernel —
+the ordinary case WAL is designed for. The real reason is that rollback journal only needs ordinary
+file locks, a lower bar than WAL's `mmap`-shared-memory coherence requirement, and this app's write
+volume (a handful of captures a day) makes WAL's actual benefit (readers never blocked by writers)
+worth nothing here — so taking the mechanism with fewer assumptions was free. `PRAGMA busy_timeout`
+handles the ordinary "two writes at once" case instead. **Don't turn WAL back on** without
+re-reading this reasoning (see TECH_STACK.md `## 4. Storage` for the fuller version).
 
 The two `db.py` files are hand-duplicated on purpose, not imported from a shared module — `bot/`
 and `dashboard/` are separate Docker images, not an npm/pip workspace. If the schema changes, update

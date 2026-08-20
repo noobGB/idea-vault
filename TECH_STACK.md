@@ -61,13 +61,29 @@ subsequent headless call, so nothing here needs an `ANTHROPIC_API_KEY`.
 
 **`sqlite3`** (Python's standard-library driver, `bot/db.py` and `dashboard/db.py`) — one file,
 `idea_vault.sqlite`, on a Docker named volume shared by both containers. Opened with the **default
-rollback journal**, not `journal_mode = WAL` (the usual default choice for a small embedded-DB app):
-WAL needs shared-memory (`mmap`) coordination between every process with the file open, and SQLite's
-own docs say that breaks down once more than one process opens the file through a virtualized
-share — which is exactly this deployment's shape (the `bot` and `dashboard` containers are two
-separate processes opening the identical bind-mounted/volume-mounted file). `PRAGMA busy_timeout` is
-set instead, so a write from one container waits briefly for the other's lock to clear rather than
-failing immediately.
+rollback journal**, not `journal_mode = WAL`. The two modes need different guarantees to stay
+correct: rollback journal only needs ordinary POSIX file locks (`fcntl`) on the main file — the
+same low-level guarantee any two processes sharing a file already need. WAL needs more: every
+connection `mmap()`s a `-shm` file into its own memory and relies on that shared mapping staying
+byte-coherent across processes, which is what SQLite's own docs say breaks down over an actual
+network filesystem.
+
+**Worth being precise about what this project's own deployment shape actually proves, versus what
+it doesn't.** `bot` and `dashboard` share a Docker **named volume**, not a bind-mounted host path —
+a named volume lives inside Docker's own storage, so both containers are just two processes under
+the same kernel, the ordinary case WAL is designed for and would likely work fine. The stronger risk
+(one process reaching a file through Docker Desktop's bind-mount translation while a *different*,
+native host process reaches the identical path directly — two genuinely different filesystem
+stacks) is real, but it's the shape of a *different* project in this author's workspace (a
+Home Assistant stack with a bind mount), not this one. Nothing here has actually been proven to
+break under WAL.
+
+So the honest reason for skipping WAL is smaller than "it would break": rollback journal's
+correctness depends on strictly less (file locking only, no `mmap`-coherence assumption), and this
+app's write volume — a handful of captures a day — means WAL's actual benefit (readers never
+blocked by writers) is worth nothing in practice. Given that, taking the mechanism with fewer
+assumptions cost nothing. `PRAGMA busy_timeout` is set regardless, so a write from one container
+waits briefly for the other's lock to clear rather than failing immediately.
 
 `bot/db.py` and `dashboard/db.py` are near-identical, **hand-duplicated on purpose** — the two
 services are separate Docker images, not a shared package, so duplicating a ~15-line schema

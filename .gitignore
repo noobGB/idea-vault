@@ -17,3 +17,7 @@ venv/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Compiled Windows launcher (build artifact -- rebuild from Launch-IdeaVault.ps1
+# via ps2exe, see README's "Windows one-click launcher" section)
+*.exe

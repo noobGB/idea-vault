@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # Node.js is needed for the Claude Code CLI (npm package) -- claude_client.py
 # shells out to it as a subprocess to do the actual AI processing.

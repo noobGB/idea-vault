@@ -4,84 +4,344 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Idea Vault{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /*
+   * Design tokens ported from the SnowPro Core Exam Webapp's tokens.css (same
+   * near-black, hairline-bordered, teal-accent visual language) -- values
+   * adapted to this app's own needs, not @imported, since these are two
+   * separate codebases. Near-black substrate, hairline borders instead of
+   * shadows, one accent used only for links/focus rings/the primary action.
+   */
   :root {
     color-scheme: light dark;
-    --bg: #f7f7f8;
-    --fg: #1a1a1a;
-    --card-bg: #ffffff;
-    --border: #e2e2e5;
-    --muted: #6b6b70;
-    --accent: #4f46e5;
+
+    /* Colour -- dark values live on bare :root (dark-first) */
+    --canvas: #08090a;
+    --card: #0f1011;
+    --raised: #161718;
+    --hairline: #23252a;
+    --hairline-strong: #383b3f;
+    --hairline-faint: #1a1c1e;
+    --text-dim: #7a7e85;
+    --text-muted: #8a8f98;
+    --text-body: #d0d6e0;
+    --text-heading: #ffffff;
+    --accent: #2bd4d9;
+    --accent-hover: #7ceaee;
+    /* Text color placed ON TOP of a solid --accent fill (the search button).
+       Bright dark-mode teal fails contrast against white text, so this app
+       extends the source token set with an accent-ink pair the same way
+       tokens.css itself adds app-specific tokens (--surface-subtle etc.)
+       alongside the ones it shares with other surfaces. */
+    --accent-ink: #06171a;
+    --status-correct: #27a644;
+    --status-incorrect: #eb5757;
+    --status-warning: #c9bb4a;
+    /* Repurposed semantically for this app: correct/incorrect/warning ->
+       processed/error/pending. */
+    --status-processed: var(--status-correct);
+    --status-error: var(--status-incorrect);
+    --status-pending: var(--status-warning);
+
+    /* Type */
+    --font-sans: Inter, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+
+    /* Shape and rhythm -- 4px base unit, 8/12/16/24/48 ladder */
+    --space-1: 8px;
+    --space-2: 12px;
+    --space-3: 16px;
+    --space-4: 24px;
+    --space-5: 48px;
+    --radius-badge: 4px;
+    --radius-control: 6px;
+    --radius-card: 12px;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #121214;
-      --fg: #ececec;
-      --card-bg: #1c1c1f;
-      --border: #2c2c30;
-      --muted: #9a9aa0;
-      --accent: #818cf8;
+
+  /* Light mode -- two selectors carry the identical override block, same
+     structure as the source tokens.css: the media query covers "system" (no
+     data-theme attribute at all, so :not([data-theme]) doesn't fight an
+     explicit choice) and the attribute selector covers an explicit "light"
+     pick, which must win regardless of OS setting. This dashboard has no JS
+     and therefore no theme-toggle control yet, so in practice only the
+     media-query branch can ever apply today -- the attribute selectors are
+     kept for parity with the source system and so a future toggle has
+     somewhere to plug in without re-deriving these values. */
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme]) {
+      --canvas: #f4f4f5;
+      --card: #ffffff;
+      --raised: #eceef1;
+      --hairline: #848a92;
+      --hairline-strong: #767c84;
+      --hairline-faint: #e4e6e9;
+      --text-dim: #686d75;
+      --text-muted: #565b62;
+      --text-body: #3a3f47;
+      --text-heading: #14161a;
+      --accent: #0a7a80;
+      --accent-hover: #065f64;
+      --accent-ink: #ffffff;
+      --status-correct: #1a7a34;
+      --status-incorrect: #b3261e;
+      --status-warning: #7a5d00;
+      --status-processed: var(--status-correct);
+      --status-error: var(--status-incorrect);
+      --status-pending: var(--status-warning);
     }
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: var(--bg);
-    color: var(--fg);
+
+  :root[data-theme="light"] {
+    --canvas: #f4f4f5;
+    --card: #ffffff;
+    --raised: #eceef1;
+    --hairline: #848a92;
+    --hairline-strong: #767c84;
+    --hairline-faint: #e4e6e9;
+    --text-dim: #686d75;
+    --text-muted: #565b62;
+    --text-body: #3a3f47;
+    --text-heading: #14161a;
+    --accent: #0a7a80;
+    --accent-hover: #065f64;
+    --accent-ink: #ffffff;
+    --status-correct: #1a7a34;
+    --status-incorrect: #b3261e;
+    --status-warning: #7a5d00;
+    --status-processed: var(--status-correct);
+    --status-error: var(--status-incorrect);
+    --status-pending: var(--status-warning);
   }
-  header { padding: 24px; max-width: 960px; margin: 0 auto; }
-  h1 { margin: 0 0 4px; font-size: 1.5rem; }
-  .subtitle { color: var(--muted); margin: 0 0 16px; font-size: 0.9rem; }
-  form.search { display: flex; gap: 8px; }
+
+  /* Explicit "dark" pick -- no-op today (dark values already live on bare
+     :root), kept as a real selector for the same reason as the source file:
+     somewhere for a future dark-mode-only tweak to go. */
+  :root[data-theme="dark"] {
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    background: var(--canvas);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--text-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent-hover); }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  ::selection { background: rgba(43, 212, 217, 0.25); }
+
+  header { padding: var(--space-4); max-width: 960px; margin: 0 auto; }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-heading);
+  }
+  .subtitle { color: var(--text-muted); margin: 0 0 var(--space-3); font-size: 0.9rem; }
+
+  form.search { display: flex; gap: var(--space-1); }
   input[type="search"] {
     flex: 1;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--card-bg);
-    color: var(--fg);
+    padding: 10px var(--space-2);
+    border-radius: var(--radius-control);
+    border: 1px solid var(--hairline);
+    background: var(--card);
+    color: var(--text-body);
+    font-family: inherit;
     font-size: 0.95rem;
   }
+  input[type="search"]::placeholder { color: var(--text-dim); }
   button {
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: none;
+    padding: 10px var(--space-3);
+    border-radius: var(--radius-control);
+    border: 1px solid transparent;
     background: var(--accent);
-    color: white;
+    color: var(--accent-ink);
+    font-family: var(--font-sans);
+    font-weight: 500;
     font-size: 0.95rem;
     cursor: pointer;
   }
-  main { max-width: 960px; margin: 0 auto; padding: 0 24px 48px; }
-  section.category { margin-bottom: 32px; }
+  button:hover { background: var(--accent-hover); }
+
+  main { max-width: 960px; margin: 0 auto; padding: 0 var(--space-4) var(--space-5); }
+
+  section.category { margin-bottom: var(--space-4); }
   section.category h2 {
-    font-size: 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-    margin-bottom: 12px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-2);
   }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-2);
+  }
+
   .card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
   }
-  .card img { max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; }
-  .card .summary { font-size: 0.95rem; line-height: 1.4; margin: 0 0 8px; }
-  .card .raw { font-size: 0.8rem; color: var(--muted); margin: 0 0 8px; word-break: break-word; }
-  .card .meta { font-size: 0.75rem; color: var(--muted); display: flex; justify-content: space-between; }
-  .status-pending { color: #d97706; }
-  .status-error { color: #dc2626; }
-  .empty { color: var(--muted); text-align: center; padding: 64px 24px; }
+
+  .card-tags {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
+  }
+
+  /* Category chip and status pill both use JetBrains Mono per the source
+     system's rule: mono for data/timestamps/badges, Inter for prose.
+     Background is --card, not --raised: tokens.css's own comment documents
+     --text-dim as contrast-verified (4.67:1 dark / AA-checked light)
+     specifically against --card/--canvas, not --raised -- measured
+     --text-dim-on-raised at 4.40:1, which fails AA's 4.5:1 for normal text,
+     so this stays on the verified pairing and leans on the border for
+     definition instead (consistent with the source system's own "hairline
+     borders instead of shadows/fills" idiom). */
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-badge);
+    padding: 2px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-processed { color: var(--status-processed); }
+  .status-processed .status-dot { background: var(--status-processed); }
+  .status-pending { color: var(--status-pending); }
+  .status-pending .status-dot { background: var(--status-pending); }
+  .status-error { color: var(--status-error); }
+  .status-error .status-dot { background: var(--status-error); }
+
+  .card img {
+    max-width: 100%;
+    border-radius: var(--radius-control);
+    margin-bottom: var(--space-2);
+    display: block;
+    border: 1px solid var(--hairline-faint);
+  }
+
+  .card .summary {
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: var(--text-body);
+    margin: 0 0 var(--space-2);
+  }
+  .summary-pending { color: var(--status-pending); }
+  .summary-error { color: var(--status-error); }
+
+  /* The original captured idea, kept visible alongside the summary instead
+     of disappearing once processing finishes. */
+  .original-link {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-control);
+    padding: 4px 10px;
+    margin-bottom: var(--space-2);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .original-link:hover {
+    color: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .original-text {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-dim);
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-control);
+    padding: var(--space-2);
+    margin: 0 0 var(--space-2);
+    max-height: 180px;
+    overflow-y: auto;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  .meta {
+    margin-top: auto;
+    padding-top: var(--space-2);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-1);
+  }
+  .source-type {
+    font-family: var(--font-sans);
+    text-transform: capitalize;
+  }
+  .timestamp { font-family: var(--font-mono); }
+
+  .empty { color: var(--text-muted); text-align: center; padding: var(--space-5) var(--space-4); }
 </style>
 </head>
 <body>
 <header>
   <h1>Idea Vault</h1>
+  {% if query %}
+  <p class="subtitle">{{ total }} of {{ vault_total }} idea{{ "s" if vault_total != 1 else "" }} match</p>
+  {% else %}
   <p class="subtitle">{{ total }} idea{{ "s" if total != 1 else "" }} captured</p>
+  {% endif %}
   <form class="search" method="get" action="/">
     <input type="search" name="q" placeholder="Search ideas…" value="{{ query }}">
     <button type="submit">Search</button>

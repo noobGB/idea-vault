@@ -31,10 +31,14 @@ CREATE TABLE IF NOT EXISTS entries (
 def get_connection() -> sqlite3.Connection:
     """Open a connection with the busy_timeout pragma set.
 
-    Deliberately the default rollback journal, not WAL -- this file is opened
-    by two separate containers (bot + dashboard), which is the same
-    cross-process-over-a-virtualized-share shape that breaks WAL's
-    shared-memory coordination. See this repo's TECH_STACK.md / CLAUDE.md.
+    Deliberately the default rollback journal, not WAL. Not a proven
+    WAL-breaks-here case -- bot and dashboard share a Docker named volume
+    (not a bind-mounted host path), so both are just two processes under the
+    same kernel, WAL's ordinary case. The real reason: rollback journal only
+    needs plain file locks (a lower bar than WAL's mmap-shared-memory
+    coherence requirement), and this app's write volume makes WAL's actual
+    benefit worth nothing -- so the mechanism with fewer assumptions was
+    free. See this repo's TECH_STACK.md / CLAUDE.md for the fuller version.
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)

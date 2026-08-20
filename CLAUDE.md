@@ -114,8 +114,9 @@ to.
   consciously (see the `github-workflow` skill's cost-reasoning section), not something to wire up
   by copying `snowpro-core-prep`'s `claude.yml` unexamined.
 
-This repo is **public** (unlike `snowpro-core-prep`, which is private), so GitHub's branch
-protection / required-status-check rulesets are actually available here for free — configured on
-`main` to require the CI workflow to pass before merging. If that ever needs re-verifying or
-reconfiguring, check Settings → Branches on the repo directly rather than assuming it's still set
-the way it was when this was written.
+This repo is **private** (default for new repos on this account — always confirm with Gaurav
+before ever making a repo public; that's his call on his own schedule, not something to default
+into). Branch protection / required-status-check rulesets need a paid plan or a public repo, same
+restriction `snowpro-core-prep` documents — not configured here for the same reason. CI still
+reports pass/fail on every PR via the Checks tab, it just doesn't technically block merging; the
+manual "watch CI to green before merging" discipline is the real gate.

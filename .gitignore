@@ -1,0 +1,19 @@
+# Secrets and local config
+.env
+
+# Local data (only relevant if you ever run outside Docker / bind-mount ./data)
+data/
+*.sqlite
+*.sqlite-journal
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ruff_cache/
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+.vscode/

@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "defaultMode": "dontAsk",
+    "allow": ["WebSearch", "WebFetch", "Read"]
+  }
+}

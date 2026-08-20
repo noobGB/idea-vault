@@ -1,0 +1,23 @@
+services:
+  bot:
+    build: ./bot
+    restart: unless-stopped
+    environment:
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+      CLAUDE_CODE_OAUTH_TOKEN: "${CLAUDE_CODE_OAUTH_TOKEN}"
+      DATA_DIR: /data
+    volumes:
+      - idea-vault-data:/data
+
+  dashboard:
+    build: ./dashboard
+    restart: unless-stopped
+    environment:
+      DATA_DIR: /data
+    ports:
+      - "${DASHBOARD_PORT:-8090}:8000"
+    volumes:
+      - idea-vault-data:/data
+
+volumes:
+  idea-vault-data:

@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from claude_client import ClaudeProcessingError, process_entry
+from claude_client import ClaudeProcessingError, ensure_workspace_trusted, process_entry
 from db import IMAGES_DIR, distinct_categories, get_connection
 from telegram import Update
 from telegram.ext import (
@@ -124,6 +124,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 def main() -> None:
+    ensure_workspace_trusted()
+
     token = os.environ["TELEGRAM_BOT_TOKEN"]
     app = Application.builder().token(token).build()
 

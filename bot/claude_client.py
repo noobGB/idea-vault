@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 
 CLAUDE_TIMEOUT_SECONDS = 120
+CLAUDE_PROJECT_DIR = "/app"
 
 JSON_SCHEMA = json.dumps(
     {
@@ -40,6 +41,37 @@ JSON_SCHEMA = json.dumps(
 
 class ClaudeProcessingError(RuntimeError):
     pass
+
+
+def ensure_workspace_trusted() -> None:
+    """Pre-accept Claude Code's workspace-trust dialog for headless use.
+
+    Claude Code gates .claude/settings.json's permissions.allow list behind a
+    separate "trust this folder" check, normally accepted via an interactive
+    dialog the first time you open Claude Code in a new directory. A headless
+    container has no human to click it, so without this, WebSearch/WebFetch/
+    Read are all silently denied regardless of settings.json -- the CLI logs
+    "this workspace has not been trusted" and just ignores the allow list.
+    Confirmed by manually running `claude -p` inside the container: before
+    this fix, permission_denials included WebFetch; after setting
+    projects[CLAUDE_PROJECT_DIR].hasTrustDialogAccepted = true in
+    ~/.claude.json, the identical call succeeded with no denials.
+
+    Done here (Python, at startup) rather than baked into the Docker image:
+    ~/.claude.json is only reliably created after a real authenticated
+    invocation, and CLAUDE_CODE_OAUTH_TOKEN isn't available at build time.
+    Idempotent -- safe to call on every container start.
+    """
+    config_path = Path.home() / ".claude.json"
+    data = {}
+    if config_path.exists():
+        try:
+            data = json.loads(config_path.read_text())
+        except json.JSONDecodeError:
+            data = {}
+    projects = data.setdefault("projects", {})
+    projects.setdefault(CLAUDE_PROJECT_DIR, {})["hasTrustDialogAccepted"] = True
+    config_path.write_text(json.dumps(data))
 
 
 def _build_prompt(raw_content: str | None, image_path: Path | None, existing_categories: list[str]) -> str:

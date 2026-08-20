@@ -53,6 +53,21 @@ Telegram (you) --> bot service --> claude -p (headless) --> SQLite --> dashboard
 6. Open `http://localhost:8090` (or whatever `DASHBOARD_PORT` you set) to browse everything you've
    captured, grouped by category, searchable.
 
+> **Windows one-click launcher (optional).** [`Launch-IdeaVault.ps1`](Launch-IdeaVault.ps1) wraps
+> step 4 and step 6 above: it starts Docker Desktop if it isn't already running, brings the
+> containers up, waits for the dashboard to respond, then opens it in your default browser. Compile
+> it into a double-clickable `.exe` once:
+> ```powershell
+> Install-PackageProvider NuGet -Scope CurrentUser -Force   # one-time, no admin needed
+> Install-Module ps2exe -Scope CurrentUser -Force -AllowClobber
+> Invoke-ps2exe -inputFile ".\Launch-IdeaVault.ps1" -outputFile ".\Idea Vault.exe" -title "Idea Vault" -noConsole:$false
+> ```
+> Keep the resulting `.exe` in this same folder (it locates the project by its own file path), then
+> double-click it — or right-click → **Send to → Desktop (create shortcut)** — any time you want to
+> open the app. It's unsigned, so Windows SmartScreen may warn on first run; that's expected for a
+> personal-project executable you built yourself — click **More info → Run anyway**. If you changed
+> `DASHBOARD_PORT` from the default `8090`, update `$AppUrl` at the top of the script to match.
+
 ## Configuration
 
 All configuration is environment variables, set in `.env` (see [`.env.example`](.env.example) for

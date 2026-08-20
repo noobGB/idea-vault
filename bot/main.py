@@ -26,6 +26,11 @@ from telegram.ext import (
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("idea-vault-bot")
 
+# httpx logs the full request URL at INFO, and Telegram's Bot API embeds the
+# bot token directly in the URL path -- without this, every poll/reply would
+# print the live token in plaintext to container logs.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 WELCOME = (
     "Send me any idea, link, or screenshot and I'll file it away -- I'll research it, "
     "summarize it, and categorize it automatically. Check the dashboard to browse everything "

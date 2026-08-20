@@ -20,6 +20,25 @@ architecture/gotchas aimed at an AI coding agent working on this repo, see [`CLA
 Telegram (you) --> bot service --> claude -p (headless) --> SQLite --> dashboard service --> you, in a browser
 ```
 
+For the full request path — including the four architectural decisions it turns on (no webhook, a
+narrow tool allow-list on the headless process, subscription auth instead of API billing, SQLite's
+rollback journal instead of WAL) — see the diagram in
+[`docs/architecture.drawio.png`](docs/architecture.drawio.png) (open
+[`docs/architecture.drawio`](docs/architecture.drawio) in [draw.io](https://app.diagrams.net/) to
+edit it, or view [`docs/architecture-flow.svg`](docs/architecture-flow.svg) /
+[`docs/architecture-flow.gif`](docs/architecture-flow.gif) for an animated version showing data
+flowing along each edge).
+
+## Screenshots
+
+| Light | Dark |
+|---|---|
+| ![Dashboard, light mode](.github/screenshot-dashboard-light.png) | ![Dashboard, dark mode](.github/screenshot-dashboard-dark.png) |
+
+Sample data shown — cards grouped by category, with a status pill, the original captured link/text
+preserved alongside the AI summary, and both a "processing" and an "error" state visible (nothing
+silently disappears if something goes wrong).
+
 ## Setup
 
 **Prerequisites**

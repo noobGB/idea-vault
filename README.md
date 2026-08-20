@@ -20,14 +20,15 @@ architecture/gotchas aimed at an AI coding agent working on this repo, see [`CLA
 Telegram (you) --> bot service --> claude -p (headless) --> SQLite --> dashboard service --> you, in a browser
 ```
 
-For the full request path — including the four architectural decisions it turns on (no webhook, a
-narrow tool allow-list on the headless process, subscription auth instead of API billing, SQLite's
-rollback journal instead of WAL) — see the diagram in
-[`docs/architecture.drawio.png`](docs/architecture.drawio.png) (open
-[`docs/architecture.drawio`](docs/architecture.drawio) in [draw.io](https://app.diagrams.net/) to
-edit it, or view [`docs/architecture-flow.svg`](docs/architecture-flow.svg) /
-[`docs/architecture-flow.gif`](docs/architecture-flow.gif) for an animated version showing data
-flowing along each edge).
+## Architecture
+
+![Idea Vault architecture — animated request flow](docs/architecture-flow.gif)
+
+The full request path, including the four architectural decisions it turns on: no webhook, a narrow
+tool allow-list on the headless process, subscription auth instead of API billing, and SQLite's
+rollback journal instead of WAL. Open [`docs/architecture.drawio`](docs/architecture.drawio) in
+[draw.io](https://app.diagrams.net/) to edit it, or see the static
+[`docs/architecture.drawio.png`](docs/architecture.drawio.png) if your viewer doesn't animate GIFs.
 
 ## Screenshots
 

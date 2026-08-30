@@ -111,6 +111,12 @@ deployment starts empty and learns its own categories from whatever you actually
   there's enough volume for it to be meaningful.
 - **No auth on the dashboard** — by design, for a LAN-only v1. Don't expose it to the open internet
   without adding your own auth layer first.
+- **Brief gap after the host machine wakes from sleep** — while the machine is actually asleep, the
+  bot processes nothing (Docker is suspended along with the host). For a minute or two after wake,
+  you may see repeated network errors in `docker compose logs bot` while the container's DNS
+  resolution recovers; this clears on its own with no restart needed. No captures are lost —
+  Telegram queues messages server-side, and long-polling fetches the backlog once the bot
+  reconnects. See TECH_STACK.md `## 2. Capture` for the mechanism.
 
 ## License
 

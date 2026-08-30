@@ -30,6 +30,18 @@ frictionless result Telegram gives for free).
 `MessageHandler(filters.PHOTO, handle_photo)` (`bot/main.py`) are the two entry points — everything
 you send is one of these two shapes.
 
+**Known behavior: host sleep/wake.** On a Windows host running this under Docker Desktop, sleeping
+the machine suspends the WSL2 VM (and every container in it) along with it — nothing runs while
+asleep, which is expected. On wake, WSL2's virtual network adapter and DNS resolver take roughly a
+minute or two to fully reinitialize; during that window the bot's `getUpdates` polling loop fails
+DNS resolution for `api.telegram.org` (`httpx.ConnectError: [Errno -2] Name or service not known`)
+and retries with the library's built-in exponential backoff (`telegram.ext._updater`). This is
+self-healing — once WSL2's DNS comes back, the very next retry succeeds with no container restart —
+and no messages are lost in the interim: Telegram holds undelivered updates server-side, and
+long-polling drains that backlog as soon as the connection recovers. Confirmed via
+`docker compose logs bot`: error bursts cluster tightly around wake events and stop cleanly once DNS
+resolves again.
+
 ## 3. Processing — headless Claude Code, not the Claude API
 
 **The Claude Code CLI, in headless/print mode** (`claude -p ...`, invoked as a subprocess from
